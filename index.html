@@ -1,0 +1,446 @@
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+
+        <script language="JavaScript">
+		
+		function AJAX(metodo,url,nome_tag,tipo_tag,valor)
+            {
+				
+			/* XMLHttpRequest é um objeto Javascript
+                ** que torna possível a comunicação assíncrona com o servidor,
+                ** sem a necessidade de recarregar a página por completo
+                */
+
+                    //verifica se o browser tem suporte a ajax
+                    if(window.XMLHttpRequest)
+                    {
+                        try
+                        {
+                                //No Mozilla e Safari é instanciado da seguinte forma:
+                                objAjax = new XMLHttpRequest();
+                        }
+                        catch(e)
+                        {
+                                objAjax = false;
+                        }
+                    }
+                    else if(window.ActiveXObject)
+                    {
+                        try
+                        {
+                               // Já no Internet Explorer e Opera (versão mais recente):
+                               objAjax = new ActiveXObject("Msxml2.XMLHTTP");
+                        }
+                        catch(e)
+                        {
+                            try
+                            {
+                                    // Já no Internet Explorer e Opera (versão mais antiga):
+                                    objAjax = new ActiveXObject("Microsoft.XMLHTTP");
+                            }
+                            catch(e)
+                            {
+                                    alert("Esse browser não tem recursos para uso do Ajax");
+                                    objAjax = false;
+                            }
+                        }
+                    }
+
+                    // Função que verifica o retorno do ajax
+                    function verificaStatus()
+                    {
+                        // onreadystatechange é o processador de mudanca de estado
+                        // enquanto estiver processando...emite a msg de carregando
+                        if(objAjax.readyState == 1) //Carregando
+                        {
+                            document.getElementById('mensagem').innerHTML = "Carregando...!";
+                        }
+                        if (objAjax.readyState == 4) // Completado
+                        {
+                                // status é resposta que o servidor web nos dá após a requisição de algum documento
+                                if(objAjax.status == 200) // Resposta do servidor OK
+                                {
+                                    // responseText  propriedade do tipo string, que retorna os resultado como texto.
+                                    // resposeXML  retorna os dados em formato XML podendo ser manipulado usando DOM
+                                    if (tipo_tag == 'valida' ) // No caso da resposta ser enviada a uma tag do tipo div
+                                    {
+                                        var resposta = unescape(objAjax.responseText.replace(/\+/g," "));
+                                     
+                                    }
+                                    else if (tipo_tag == 'div' ) // No caso da resposta ser enviada a uma tag do tipo div
+                                    {										
+                                        document.getElementById(nome_tag).innerHTML = unescape(objAjax.responseText.replace(/\+/g," "));
+                                    }
+                                    else if (tipo_tag == 'text' || tipo_tag == 'hidden') // No caso da resposta ser enviada a uma tag do tipo text ou hidden
+                                    {
+                                        document.getElementById(nome_tag).value = unescape(objAjax.responseText.replace(/\+/g," "));
+                                    }
+                                    else if (tipo_tag == 'select') // No caso da resposta ser enviada a uma tag do tipo select
+                                    {
+                                        // deixa apenas o elemento 1 no option, os outros são excluídos
+                                        document.getElementById(nome_tag).options.length = 1;
+                                        // pega o retorno do ajax que esta em XML e joga na variável objseledt
+                                        var objselect = objAjax.responseXML;
+                                        // seleciona o elemento item
+                                        var dataArray   = objselect.getElementsByTagName("item");
+                                        // se o objeto tiver algum item realiza um loop em todos elementos
+                                         if(dataArray.length > 0)
+                                         {
+                                            //percorre o arquivo XML paara extrair os dados
+                                            for(var i = 0 ; i < dataArray.length ; i++)
+                                            {
+                                                var item = dataArray[i];
+                                                //conteúdo dos campos no arquivo XML
+                                                var codigo    =  item.getElementsByTagName("codigo")[0].firstChild.nodeValue;
+                                                var descricao =  item.getElementsByTagName("descricao")[0].firstChild.nodeValue;
+
+                                                //cria um novo option dinamicamente
+                                                var novo = document.createElement("option");
+                                                //atribui um ID a esse elemento
+                                                novo.setAttribute("id", "opcoes");
+                                                //atribui um valor
+                                                novo.value = codigo;
+                                                //atribui um texto
+                                                novo.text  = descricao;
+                                                //finalmente adiciona o novo elemento
+                                                document.getElementById(nome_tag).options.add(novo);
+
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    window.alert("Houve um erro ao recuperar os dados remotos: "+objAjax.statusText);
+                                }
+                        }
+                    }
+
+                    // Especifica o método, URL e especifica se a requisição deve ser assíncrona ou não.
+                    objAjax.open(metodo,url,true);
+                    // Informa as configurações do cabecalho
+                    objAjax.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+                    // Envia a requisição. O parâmetro valor são os parâmetros passados para o script que fará o processamento.
+					
+					
+					//document.getElementById("corpo").innerHTML = valor; 	
+					
+					objAjax.send(valor);
+                    // chama a função verificaStatus para tratar o retorno dos dados
+                    objAjax.onreadystatechange=verificaStatus;
+
+            }
+
+		
+		
+           function enviar()
+            {
+                var objForm = document.forms['formulario'];
+                var retorno = true;
+                var checkdate = true;
+                var valor = '';
+                var vlr_checkbox = Array();
+                var contador = 0;
+				var content;
+
+
+                for (var i = 0; i < objForm.elements.length; i++)
+                {	
+						if (objForm.elements[i].getAttribute('multiple') == 'multiple')
+                        {
+                            for (var j = 0; j < objForm.elements[i].options.length; j++)
+                            {
+                                if(objForm.elements[i].options[j].selected == true)
+                                {
+                                    valor = valor+objForm.elements[i].name+'='+objForm.elements[i].options[j].value+"&";
+                                }
+                            }
+                        }
+                  
+                        else
+                        {
+                            objForm.elements[i].style.borderColor = '';
+							
+							valorcampo = objForm.elements[i].value.trim();
+							valorcampo = valorcampo.replace(/[&]/g, "E");	
+							
+                            valor = valor+objForm.elements[i].name.trim()+"="+valorcampo+"&";
+							
+                            //valor = valor+objForm.elements[i].name.trim()+"="+objForm.elements[i].value.trim()+"&";
+							
+                        }
+
+                }
+                  
+                if (!retorno)
+                {
+                    alert('Por favor, preencha os campos marcados em vermelho!');
+                }
+                else
+                {
+													
+                    valores = valor.substr(0,valor.length-1);
+					valores = valores.replace(/[+]/g, "*");
+					valores = valores.replace(/[-]/g, "@");
+					valores = valores.replace(/[#]/g, "!");	
+					
+                    url = "tratamento.php";
+                    nome_tag = "corpo";
+                    tipo_tag = "div";
+									
+					AJAX('POST',url,nome_tag,tipo_tag,valores);
+									
+					var tbdy = document.getElementsByTagName('tbody')[0];	
+					
+					while (tbdy.hasChildNodes()) {
+					  tbdy.removeChild(tbdy.lastChild);
+					}					
+					var botao = document.getElementById("BotaoImportar");
+					  botao.remove();
+
+                }
+
+            }
+			
+		function abrepedagio(valor)
+		{
+		var tipo = document.getElementById('tipo');
+		
+		if(valor == 'TIPOFORNECEDOR_4'){
+			
+		tipo.style.visibility = 'visible';
+			
+		}else 
+		{
+		
+		tipo.style.visibility = 'hidden';	
+				
+		}
+					
+			
+		}
+		
+		
+		
+		document.addEventListener('paste', function (evt) {
+		  clipdata = evt.clipboardData || window.clipboardData;
+		  colar(clipdata.getData('text/plain'));
+		});	
+	
+		function colar(datapaste) {
+		
+		
+		var botao = document.getElementById("BotaoImportar");
+		
+					
+		if(botao !== null){
+			
+		var tbdy = document.getElementsByTagName('tbody')[0];	
+			//alert(typeof tbdy.firstChild);
+			//alert(tbdy.firstChild.textContent ? tbdy.firstChild.textContent : tbdy.firstChild.innerText);
+			
+		while (tbdy.hasChildNodes()) {
+					  tbdy.removeChild(tbdy.lastChild);
+					}		
+					  botao.remove();
+		}
+	  
+		  var idtbd = document.getElementById("tbd");
+		   var form = document.getElementById("formulario");
+		 
+
+
+		var data = datapaste;		
+		
+		  var body = document.getElementsByTagName('body')[0];
+		  body.setAttribute("id", "bd");
+		  
+		  var tbl = document.getElementsByTagName('table')[0];
+		 tbl.setAttribute("id", "tb");	 	
+			  
+		    tbl.style.width = '100%';
+		    tbl.setAttribute('border', '0');
+		    tbl.setAttribute('border-collapse','collapse');
+		    tbl.setAttribute('table-layout','fixed');
+		    tbl.setAttribute('margin','auto');
+			
+		    var tbdy = document.getElementsByTagName('tbody')[0];	
+			
+			tbdy.setAttribute("id", "tbd");
+			
+		    tbdy.style.width = '100%';
+		    tbdy.setAttribute('border', '0');
+		    tbdy.setAttribute('border-collapse','collapse');
+		    tbdy.setAttribute('table-layout','fixed');
+		    tbdy.setAttribute('margin','auto');
+			
+			
+			
+			var rows = data.split("\n");
+			var cab = rows[0].split("\t");
+			
+
+			for(var y in rows) {
+				var cells = rows[y].split("\t");						
+										
+				var row = document.createElement("tr");
+				
+				
+				for(var x in cells) {
+					
+					var col = document.createElement("td");
+					
+					var valor = document.createElement("input");
+						valor.setAttribute('type', 'text');
+						valor.setAttribute('value', cells[x]);
+						valor.style.width = '100%';
+						valor.setAttribute('margin', '0px');
+						valor.setAttribute('border', '1px solid #CCC');
+						valor.setAttribute('box-sizing', 'border-box');
+						valor.setAttribute('id',y+'#'+cab[x]);
+						valor.setAttribute('name',y+'#'+cab[x]);
+												
+						if(y == 0) {
+							
+							valor.style.background = "black";
+							valor.style.color = "white";
+						}					
+					 							
+						col.appendChild(valor);
+						row.appendChild(col);
+					
+				}
+			
+			tbdy.appendChild(row);
+		}
+
+  var rowCount2 = tbdy.rows.length;
+  tbdy.deleteRow(rowCount2 -1);
+
+
+
+	var enviar = document.createElement("input");
+	enviar.setAttribute('type', 'button');
+	enviar.setAttribute('onClick', 'enviar();');
+	enviar.setAttribute('value', 'Importar');
+	enviar.setAttribute('id', 'BotaoImportar');
+	
+  form.appendChild(enviar);
+  
+  tbl.appendChild(tbdy);
+  
+  form.appendChild(tbl);
+   
+   
+}
+</script>
+<style type="text/css">
+	.fcc-btn {
+  background-color: #199319;
+  color: white;
+  padding: 15px 25px;
+  text-decoration: none;
+}
+
+.fcc-btn:hover {
+  background-color: #223094;
+}
+.alert {
+     width: 50%;
+    padding: 5px;
+    background-color: #98635f;
+    color: white;
+    text-align: center;
+	margin: auto;
+}
+body{
+    font-family: 'Roboto', sans-serif;
+	
+}
+#tituloformulario{
+	margin: 1.5rem;
+    POSITION: RELATIVE;
+    TEXT-ALIGN: CENTER;
+    BACKGROUND-COLOR: #817e7e;
+    color: white;
+    height: 2rem;
+    vertical-align: middle;
+    line-height: 2rem;
+	
+}
+#formulariocompleto{
+	margin: 0.2rem 1.5rem;
+    padding: 0.5rem;
+	POSITION: RELATIVE;
+	
+}
+</style>
+
+<html>
+<body>
+<br><br>
+
+<div id="tituloformulario">
+FORMULÁRIO DE IMPORTAÇÃO DE DADOS
+</div>
+<div id="formulariocompleto">
+<form id="formulario">
+<label for="tabela">Escolha o extrato:</label>
+<select name="tabela" id="tabela" onchange="abrepedagio(this.value);">
+  <option value=""></option>
+  <option value="FORNECEDOR_1">FORNECEDOR 1</option>
+  <option value="FORNECEDOR_2">FORNECEDOR 2</option>
+  <option value="FORNECEDOR_3">FORNECEDOR 3</option>
+  <option value="FORNECEDOR_4">FORNECEDOR 4</option>
+  <option value="FORNECEDOR_5">FORNECEDOR 5</option>
+  <option value="FORNECEDOR_6">FORNECEDOR 6</option>
+  <option value="FORNECEDOR_7">FORNECEDOR 7</option>
+</select>
+<select id="tipo" name="tipo" style="visibility:hidden;">
+  <option value="tipo_1">TIPO 1</option>
+  <option value="tipo_2">TIPO 2</option>
+  <option value="tipo_3">TIPO 3</option>
+</select>
+<br>
+<label for="ano">Escolha o Ano do extrato:</label>
+<select name="ano" id="ANOREF">
+  <option value="2021">2021</option>
+  <option value="2022">2022</option>
+  <option value="2023">2023</option>
+  <option value="2024">2024</option>
+  <option value="2025">2025</option>
+</select>
+<br>
+<label for="mes">Escolha o Mês do Fechamento:</label>
+<select name="mes" id="MESREF">
+	<option value=""></option>
+	<option value="01">Janeiro</option>
+	<option value="02">Fevereiro</option>
+	<option value="03">Março</option>
+	<option value="04">Abril</option>
+	<option value="05">Maio</option>
+	<option value="06">Junho</option>
+	<option value="07">Julho</option>
+	<option value="08">Agosto</option>
+	<option value="09">Setembro</option>
+	<option value="10">Outubro</option>
+	<option value="11">Novembro</option>
+	<option value="12">Dezembro</option>
+</select>
+<p>Cole seus dados do excel:</p>
+<div id="formulariotabela">
+<table>
+	<tbody>
+	</tbody>
+</table>
+</div>
+</form>
+</div>
+<div id="mensagem" style="POSITION: RELATIVE;">
+</div>
+<div id="corpo" style="POSITION: RELATIVE;">
+</div>
+</body>
+</html>
